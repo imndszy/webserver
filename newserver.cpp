@@ -79,7 +79,7 @@ static int make_socket_non_blocking (int sfd){
 }
 
 static void* accept_new_connection(int socketfd, EpollEvent &eventBase, void *arg){
-//    struct epoll_event event;
+
     int s;
     while (1)
     {
@@ -126,21 +126,19 @@ static void* accept_new_connection(int socketfd, EpollEvent &eventBase, void *ar
         accpected.fd = infd;
         accpected.event = EPOLLIN | EPOLLET;
         accpected.FLAG = ACCEPT;
-//        event.data.fd = infd;
-//        event.events = EPOLLIN | EPOLLET;
         accpected.callback = handle_new_connection;
 
         eventBase.addEvent(accpected);
-//        s = epoll_ctl (efd, EPOLL_CTL_ADD, infd, &event);
-//        if (s == -1)
-//        {
-//            std::cerr<<"epoll_ctl";
-//            abort ();
-//        }
+
     }
 }
 
 static void* handle_new_connection(int fd, EpollEvent &event, void *arg){
+    /* We have data on the fd waiting to be read. Read and
+       display it. We must read whatever data is available
+       completely, as we are running in edge-triggered mode
+       and won't get a notification again for the same
+       data. */
     int done = 0,s=0;
 
     while (1)
@@ -213,117 +211,19 @@ int main (int argc, char *argv[]){
         abort ();
     }
 
-//    efd = epoll_create1 (0);
-//    if (efd == -1)
-//    {
-//        std::cerr<<"epoll_create";
-//        abort ();
-//    }
-
     //对socket套接字注册epoll
     Event mainEvent;
     mainEvent.fd = sfd;
-//    event.data.fd = sfd;
     mainEvent.event = EPOLLIN | EPOLLET;
-    mainEvent.arg = NULL;
     mainEvent.FLAG = LISTEN;
     mainEvent.callback = accept_new_connection;
-//    event.events = EPOLLIN | EPOLLET;
-//    s = epoll_ctl (efd, EPOLL_CTL_ADD, sfd, &event);
-//    if (s == -1)
-//    {
-//        std::cerr<<"epoll_ctl";
-//        abort ();
-//    }
+
     eventBase.addEvent(mainEvent);
 
-    /* Buffer where events are returned */
-    //开辟空间存储epoll events，后续可以用自定义epoll对象动态添加的方式
-//    events = (struct epoll_event*)calloc(MAXEVENTS, sizeof event);
 
     /* The event loop */
     while (1)
-    {
         eventBase.dispatcher();
-//        int n, i;
-//
-//        n = epoll_wait (efd, events, MAXEVENTS, -1);
-//        for (i = 0; i < n; i++)
-//        {
-//            if ((events[i].events & EPOLLERR) ||
-//                (events[i].events & EPOLLHUP) ||
-//                (!(events[i].events & EPOLLIN)))
-//            {
-//                /* An error has occured on this fd, or the socket is not
-//                   ready for reading (why were we notified then?) */
-//                fprintf (stderr, "epoll error\n");
-//                close (events[i].data.fd);
-//                continue;
-//            }
-//
-//            else if (sfd == events[i].data.fd)
-//            {
-//                /* We have a notification on the listening socket, which
-//                   means one or more incoming connections. */
-//
-//                handle_new_connection(sfd, eventBase, NULL);
-//                continue;
-//            }
-//            else
-//            {
-//                /* We have data on the fd waiting to be read. Read and
-//                   display it. We must read whatever data is available
-//                   completely, as we are running in edge-triggered mode
-//                   and won't get a notification again for the same
-//                   data. */
-//                int done = 0;
-//
-//                while (1)
-//                {
-//                    ssize_t count;
-//                    char buf[512];
-//
-//                    count = read (events[i].data.fd, buf, sizeof buf);
-//                    if (count == -1)
-//                    {
-//                        /* If errno == EAGAIN, that means we have read all
-//                           data. So go back to the main loop. */
-//                        if (errno != EAGAIN)
-//                        {
-//                            std::cerr<<"read";
-//                            done = 1;
-//                        }
-//                        break;
-//                    }
-//                    else if (count == 0)
-//                    {
-//                        /* End of file. The remote has closed the
-//                           connection. */
-//                        done = 1;
-//                        break;
-//                    }
-//
-//                    /* Write the buffer to standard output */
-//                    s = write (1, buf, count);
-//                    if (s == -1)
-//                    {
-//                        std::cerr<<"write";
-//                        abort ();
-//                    }
-//                }
-//
-//                if (done)
-//                {
-//                    printf ("Closed connection on descriptor %d\n",
-//                            events[i].data.fd);
-//
-//                    /* Closing the descriptor will make epoll remove it
-//                       from the set of descriptors which are monitored. */
-//                    close (events[i].data.fd);
-//                }
-//            }
-//        }
-    }
 
     close (sfd);
 

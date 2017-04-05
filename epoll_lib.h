@@ -114,6 +114,8 @@ int EpollEvent::dispatcher(){
             continue;
         }
         else if(event.FLAG==LISTEN && event.callback){
+            /* We have a notification on the listening socket, which
+               means one or more incoming connections. */
             event.callback(fd, *this, event.arg);
             continue;
         }else if(event.FLAG==ACCEPT && event.callback){
